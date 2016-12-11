@@ -4,10 +4,10 @@ package io.github.abhipil.sweeper_ai.game;
  * @author abhishek
  *         created on 12/10/16.
  */
-public class Move {
+public class Position {
     private final int x, y;
 
-    public Move(int xPos, int yPos) {
+    public Position(int xPos, int yPos) {
         x=xPos;
         y=yPos;
     }
