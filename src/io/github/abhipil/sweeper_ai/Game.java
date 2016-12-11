@@ -2,9 +2,10 @@ package io.github.abhipil.sweeper_ai;
 
 import io.github.abhipil.sweeper_ai.game.Square;
 
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+
 
 /**
  * Created by jay on 12/10/16.
@@ -18,6 +19,7 @@ public class Game {
 
     private final AtomicLong numRevealed;
     private final AtomicBoolean gameOver;
+
 
 
     // constructor
@@ -51,21 +53,21 @@ public class Game {
 
                 board[rRow][rCol] = new Square(rRow,rCol,true);
                 if( rRow - 1 >= 0 && rCol - 1 >= 0 )	// upper left square
-                    board[rRow - 1][rCol - 1].addNeighbors( 1 );
+                    board[rRow - 1][rCol - 1].addNeighbour();
                 if( rRow - 1 >= 0 && rCol >= 0 )	// upper middle square
-                    board[rRow - 1][rCol].addNeighbors( 1 );
+                    board[rRow - 1][rCol].addNeighbour();
                 if( rRow - 1 >= 0 && rCol + 1 < edgeSize )	// upper right square
-                    board[rRow - 1][rCol + 1].addNeighbors( 1 );
+                    board[rRow - 1][rCol + 1].addNeighbour();
                 if( rRow >= 0 && rCol - 1 >= 0 )	// middle left square
-                    board[rRow][rCol - 1].addNeighbors( 1 );
+                    board[rRow][rCol - 1].addNeighbour();
                 if( rRow >= 0 && rCol + 1 < edgeSize )	// middle right square
-                    board[rRow][rCol + 1].addNeighbors( 1 );
+                    board[rRow][rCol + 1].addNeighbour();
                 if( rRow + 1 < edgeSize && rCol - 1 >= 0 )	// lower left square
-                    board[rRow + 1][rCol - 1].addNeighbors( 1 );
+                    board[rRow + 1][rCol - 1].addNeighbour();
                 if( rRow + 1 < edgeSize && rCol >= 0 )	// lower middle square
-                    board[rRow + 1][rCol].addNeighbors( 1 );
+                    board[rRow + 1][rCol].addNeighbour();
                 if( rRow + 1 < edgeSize && rCol + 1 < edgeSize )	// lower left square
-                    board[rRow + 1][rCol + 1].addNeighbors( 1 );
+                    board[rRow + 1][rCol + 1].addNeighbour();
 
             }
         }
@@ -83,11 +85,48 @@ public class Game {
     }
 
     public void leftClick(int xPos, int yPos) {
-
+        if (board[xPos][yPos].isMine()) {
+            gameOver.set(true);
+        } else if (board[xPos][yPos].getNeighbouringMines() == 0) {
+            expandZeroes(xPos, yPos);
+        } else {
+            if (!board[xPos][yPos].isRevealed()) {
+                board[xPos][yPos].reveal();
+            }
+        }
     }
-    
-    public Square get(int xPos, int yPos) {
 
+    private void expandZeroes(int xPos, int yPos) {
+        Set<Square> visited = new HashSet<>();
+        Queue<Square> queue = new LinkedList<>();
+        queue.offer(board[xPos][yPos]);
+        visited.add(queue.peek());
+        while (!queue.isEmpty()) {
+            Square current = queue.poll();
+            current.reveal();
+            if (current.getNeighbouringMines() != 0) {
+                continue;
+            }
+            int x = current.getX(), y = current.getY();
+            for (int i = x-1; i<3; i++) {
+                for (int j = y-1; j <3 ; j++) {
+                    if (i<0 || i==edgeSize-1) {
+                        continue;
+                    }
+                    if (j<0 || j==edgeSize-1) {
+                        continue;
+                    }
+                    Square child = board[i][j];
+                    if (!visited.contains(child)) {
+                        queue.offer(child);
+                        visited.add(child);
+                    }
+                }
+            }
+        }
+    }
+
+    public Square get(int xPos, int yPos) {
         return board[xPos][yPos];
     }
 }
