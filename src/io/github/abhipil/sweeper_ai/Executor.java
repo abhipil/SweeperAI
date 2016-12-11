@@ -1,5 +1,8 @@
 package io.github.abhipil.sweeper_ai;
 
+import io.github.abhipil.sweeper_ai.agent.Agent;
+import io.github.abhipil.sweeper_ai.agent.HumanAgent;
+
 import java.util.Random;
 
 /**
@@ -12,23 +15,49 @@ public class Executor {
 
     public static void main(String[] args) {
         // Parse arguments
-        int edgesize=0;
+        int edgeSize=0;
         double mineFreq=0.0d;
         try {
-            edgesize = Integer.parseInt(args[0]);
+            edgeSize = Integer.parseInt(args[0]);
             mineFreq = Double.parseDouble(args[1]);
         } catch (NumberFormatException nfe) {
             printHelp();
             System.exit(0);
         }
+
+        /*
+        *  Game game = new Game(edgesize, mineFreq);
+        *
+        *  game.leftClick(3, 5);
+        *  game.print();
+        * */
         // Initialise Game instance
-        Game game = new Game(edgesize, mineFreq);
 
-        // Initialise Player instance
-        game.leftClick(3, 5);
+        Executor executor = new Executor();
+        Agent agent = new HumanAgent();
+        executor.runSingleGame(agent, edgeSize, mineFreq);
+
+    }
+
+    private static void runSingleGame(Agent agent, int edgeSize, double mineFreq) {
+
+
+        Game game = new Game(edgeSize,mineFreq);
+        int moves =0;
+        while (!game.isOver()) {
+
+            if (agent instanceof HumanAgent) {
+                game.print();
+            }
+            game.leftClick(agent.getMove(game));
+            moves ++;
+        }
         game.print();
-
-        // Initialise game loop
+        if(game.isWon()) {
+            System.out.println("You have won the game in "+moves+" moves");
+        } else {
+            System.out.println("You lost!!");
+        }
     }
 
     private static void printHelp() {

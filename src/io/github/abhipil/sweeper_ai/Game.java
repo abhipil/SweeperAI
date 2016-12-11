@@ -2,6 +2,7 @@ package io.github.abhipil.sweeper_ai;
 
 import io.github.abhipil.sweeper_ai.game.Position;
 import io.github.abhipil.sweeper_ai.game.Square;
+import javafx.geometry.Pos;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -92,7 +93,8 @@ public class Game {
         return numRevealed.get() == edgeSize*edgeSize-numOfMines;
     }
 
-    public void leftClick(int xPos, int yPos) {
+    public void leftClick(Position pos) {
+        int xPos = pos.getX(), yPos=pos.getY();
         if (board[xPos][yPos].isMine()) {
             for (Square mine : mines) {
                 mine.reveal();
@@ -115,19 +117,21 @@ public class Game {
         queue.offer(board[xPos][yPos]);
         while (!queue.isEmpty()) {
             Square current = queue.poll();
-            current.reveal();
-            numRevealed.incrementAndGet();
+            if (!current.isRevealed()) {
+                current.reveal();
+                numRevealed.incrementAndGet();
+            }
             visited.add(current);
             if (current.getNeighbouringMines() != 0) {
                 continue;
             }
             int x = current.getX(), y = current.getY();
             for (int i = x-1; i<edgeSize && i<x+2; i++) {
-                if (i<0 || i==edgeSize-1) {
+                if (i<0 || i==edgeSize) {
                     continue;
                 }
                 for (int j = y-1; j<edgeSize && j<y+2 ; j++) {
-                    if (j<0 || j==edgeSize-1 ) {
+                    if (j<0 || j==edgeSize ) {
                         continue;
                     }
                     Square child = board[i][j];
@@ -145,7 +149,17 @@ public class Game {
 
     public void print() {
         StringBuffer sb = new StringBuffer();
+        sb.append(' ').append(' ');
         for (int i = 0; i < edgeSize; i++) {
+            sb.append(i);
+        }
+        sb.append("\n  ");
+        for (int i = 0; i < edgeSize; i++) {
+            sb.append('-');
+        }
+        sb.append('\n');
+        for (int i = 0; i < edgeSize; i++) {
+            sb.append(i).append('|');
             for (int j = 0; j < edgeSize; j++) {
                 if (board[i][j].isRevealed()) {
                     if (board[i][j].isMine()) {
