@@ -1,7 +1,7 @@
 package io.github.abhipil.sweeper_ai.agent;
 
 import io.github.abhipil.sweeper_ai.Game;
-import io.github.abhipil.sweeper_ai.game.Move;
+import io.github.abhipil.sweeper_ai.game.Position;
 
 import java.util.Scanner;
 
@@ -16,7 +16,7 @@ public class HumanAgent implements Agent {
 
     Scanner in = new Scanner(System.in);
     @Override
-    public Move getMove(Game game) {
+    public Position getMove(Game game) {
         String input = in.nextLine();
         int x, y;
         if(input != null) {
@@ -24,7 +24,7 @@ public class HumanAgent implements Agent {
             try {
                 x = Integer.parseInt(vals[0]);
                 y = Integer.parseInt(vals[1]);
-                return new Move(x, y);
+                return new Position(x, y);
             } catch (NumberFormatException nfe) {
                 printUsage();
                 return getMove(game);

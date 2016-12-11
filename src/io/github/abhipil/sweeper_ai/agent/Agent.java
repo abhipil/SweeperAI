@@ -1,7 +1,7 @@
 package io.github.abhipil.sweeper_ai.agent;
 
 import io.github.abhipil.sweeper_ai.Game;
-import io.github.abhipil.sweeper_ai.game.Move;
+import io.github.abhipil.sweeper_ai.game.Position;
 
 /**
  * @author abhishek
@@ -9,5 +9,5 @@ import io.github.abhipil.sweeper_ai.game.Move;
  */
 public interface Agent {
 
-    Move getMove(Game game);
+    Position getMove(Game game);
 }
