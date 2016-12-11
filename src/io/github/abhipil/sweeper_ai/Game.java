@@ -1,5 +1,6 @@
 package io.github.abhipil.sweeper_ai;
 
+import io.github.abhipil.sweeper_ai.game.Move;
 import io.github.abhipil.sweeper_ai.game.Square;
 
 import java.util.*;
@@ -17,22 +18,30 @@ public class Game {
     private final double mineFreq;
     private final long numOfMines;
 
+    private final List<Square> mines;
     private final AtomicLong numRevealed;
     private final AtomicBoolean gameOver;
 
 
 
     // constructor
-    public Game(int edgeSize, int mineFreq) {
+    public Game(int edgeSize, double mineFreq) {
         // initializing edgeSize
         this.edgeSize = edgeSize;
         this.mineFreq = mineFreq;
-        numOfMines = (long) (edgeSize * edgeSize) * mineFreq;
+        numOfMines = (long) ((edgeSize * edgeSize) * mineFreq);
+        System.out.println("Size: " + edgeSize + " bombs: " + numOfMines);
 
         board = new Square[edgeSize][edgeSize];
-        generateMines();
+        for (int i = 0; i < edgeSize; i++) {
+            for (int j = 0; j < edgeSize; j++) {
+                board[i][j] = new Square(i, j, false);
+            }
+        }
+        mines = new ArrayList<>();
         numRevealed = new AtomicLong(0);
         gameOver = new AtomicBoolean(false);
+        generateMines();
     }
 
     private void generateMines() {
@@ -40,18 +49,17 @@ public class Game {
         Random rand = new Random();
         int rCol,rRow;
 
-        rCol = rand.nextInt( edgeSize );
-        rRow = rand.nextInt( edgeSize );
-
         for(int index = 0 ; index < numOfMines ; index++ ) {
-
+            rCol = rand.nextInt( edgeSize );
+            rRow = rand.nextInt( edgeSize );
             if (board[rRow][rCol].isMine()) {
                 index--;
             }
 
             else {
-
+                System.out.println("X: " + rRow + " Y: " + rCol);
                 board[rRow][rCol] = new Square(rRow,rCol,true);
+                mines.add(board[rRow][rCol]);
                 if( rRow - 1 >= 0 && rCol - 1 >= 0 )	// upper left square
                     board[rRow - 1][rCol - 1].addNeighbour();
                 if( rRow - 1 >= 0 && rCol >= 0 )	// upper middle square
@@ -86,40 +94,45 @@ public class Game {
 
     public void leftClick(int xPos, int yPos) {
         if (board[xPos][yPos].isMine()) {
+            for (Square mine : mines) {
+                mine.reveal();
+            }
             gameOver.set(true);
         } else if (board[xPos][yPos].getNeighbouringMines() == 0) {
             expandZeroes(xPos, yPos);
         } else {
             if (!board[xPos][yPos].isRevealed()) {
                 board[xPos][yPos].reveal();
+                numRevealed.incrementAndGet();
             }
         }
     }
 
     private void expandZeroes(int xPos, int yPos) {
+        System.out.println("Expanding zeroes");
         Set<Square> visited = new HashSet<>();
         Queue<Square> queue = new LinkedList<>();
         queue.offer(board[xPos][yPos]);
-        visited.add(queue.peek());
         while (!queue.isEmpty()) {
             Square current = queue.poll();
             current.reveal();
+            numRevealed.incrementAndGet();
+            visited.add(current);
             if (current.getNeighbouringMines() != 0) {
                 continue;
             }
             int x = current.getX(), y = current.getY();
-            for (int i = x-1; i<3; i++) {
-                for (int j = y-1; j <3 ; j++) {
-                    if (i<0 || i==edgeSize-1) {
-                        continue;
-                    }
-                    if (j<0 || j==edgeSize-1) {
+            for (int i = x-1; i<edgeSize && i<x+2; i++) {
+                if (i<0 || i==edgeSize-1) {
+                    continue;
+                }
+                for (int j = y-1; j<edgeSize && j<y+2 ; j++) {
+                    if (j<0 || j==edgeSize-1 ) {
                         continue;
                     }
                     Square child = board[i][j];
                     if (!visited.contains(child)) {
                         queue.offer(child);
-                        visited.add(child);
                     }
                 }
             }
@@ -128,5 +141,29 @@ public class Game {
 
     public Square get(int xPos, int yPos) {
         return board[xPos][yPos];
+    }
+
+    public void print() {
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < edgeSize; i++) {
+            for (int j = 0; j < edgeSize; j++) {
+                if (board[i][j].isRevealed()) {
+                    if (board[i][j].isMine()) {
+                        sb.append('*');
+                    } else {
+                        int neighbours = board[i][j].getNeighbouringMines();
+                        if (neighbours == 0) {
+                            sb.append(' ');
+                        } else {
+                            sb.append(neighbours);
+                        }
+                    }
+                } else {
+                    sb.append('.');
+                }
+            }
+            sb.append('\n');
+        }
+        System.out.print(sb.toString());
     }
 }

@@ -7,6 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by jay on 12/10/16.
  */
 public class Square {
+    private static final int DEFAULT_HASH = 31;
+
     private final int xPos, yPos;
     private final boolean mine;
 
@@ -21,12 +23,16 @@ public class Square {
         revealed = new AtomicBoolean(false);
     }
 
-    public int addNeighbour(){
-        return neighbouringMines.incrementAndGet();
+    public void addNeighbour(){
+        if (!isMine()) {
+            neighbouringMines.incrementAndGet();
+        }
     }
 
     public int getNeighbouringMines() {
-        return neighbouringMines.get();
+        if (!isMine())
+            return neighbouringMines.get();
+        throw new IllegalStateException("Square is a mine, does not have the concept of neighbours");
     }
 
     public boolean isMine() {
@@ -47,5 +53,38 @@ public class Square {
 
     public boolean isRevealed() {
         return revealed.get();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if(this == o) {
+            return true;
+        }
+        if(o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Square that = (Square) o;
+        if (this.getX() != that.getX() || this.getY() != that.getY()) {
+            return false;
+        }
+        if (this.isMine() != that.isMine()) {
+            return false;
+        }
+        if (!isMine() && this.getNeighbouringMines() != this.getNeighbouringMines()) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = DEFAULT_HASH;
+        hash += DEFAULT_HASH*((Integer) getX()).hashCode();
+        hash += DEFAULT_HASH*((Integer) getY()).hashCode();
+        hash += DEFAULT_HASH*((Boolean) isMine()).hashCode();
+        if (!isMine()) {
+            hash += DEFAULT_HASH*((Integer) getNeighbouringMines()).hashCode();
+        }
+        return hash;
     }
 }
