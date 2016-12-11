@@ -1,4 +1,4 @@
-package io.github.sweeper_ai.game;
+package io.github.abhipil.sweeper_ai.game;
 
 /**
  * Created by jay on 12/10/16.

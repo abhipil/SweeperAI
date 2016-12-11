@@ -1,4 +1,4 @@
-package io.github.sweeper_ai;
+package io.github.abhipil.sweeper_ai;
 
 /**
  * Created by jay on 12/10/16.

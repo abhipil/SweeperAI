@@ -1,6 +1,6 @@
-package io.github.sweeper_ai;
+package io.github.abhipil.sweeper_ai;
 
-import io.github.sweeper_ai.game.Square;
+import io.github.abhipil.sweeper_ai.game.Square;
 
 /**
  * Created by jay on 12/10/16.
