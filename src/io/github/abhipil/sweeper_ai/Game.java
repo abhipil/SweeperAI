@@ -1,6 +1,6 @@
 package io.github.abhipil.sweeper_ai;
 
-import io.github.abhipil.sweeper_ai.game.Move;
+import io.github.abhipil.sweeper_ai.game.Position;
 import io.github.abhipil.sweeper_ai.game.Square;
 
 import java.util.*;
@@ -35,7 +35,7 @@ public class Game {
         board = new Square[edgeSize][edgeSize];
         for (int i = 0; i < edgeSize; i++) {
             for (int j = 0; j < edgeSize; j++) {
-                board[i][j] = new Square(i, j, false);
+                board[i][j] = new Square(new Position(i,j), false);
             }
         }
         mines = new ArrayList<>();
@@ -58,7 +58,7 @@ public class Game {
 
             else {
                 System.out.println("X: " + rRow + " Y: " + rCol);
-                board[rRow][rCol] = new Square(rRow,rCol,true);
+                board[rRow][rCol] = new Square(new Position(rRow,rCol),true);
                 mines.add(board[rRow][rCol]);
                 if( rRow - 1 >= 0 && rCol - 1 >= 0 )	// upper left square
                     board[rRow - 1][rCol - 1].addNeighbour();

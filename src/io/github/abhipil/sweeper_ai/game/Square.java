@@ -9,15 +9,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Square {
     private static final int DEFAULT_HASH = 31;
 
-    private final int xPos, yPos;
+    private final Position position;
     private final boolean mine;
 
     private final AtomicInteger neighbouringMines;
     private final AtomicBoolean revealed;
 
-    public Square(int xPos, int yPos, boolean mine) {
-        this.xPos = xPos;
-        this.yPos = yPos;
+    public Square(Position position, boolean mine) {
+        this.position = position;
         this.mine = mine;
         neighbouringMines = new AtomicInteger(0);
         revealed = new AtomicBoolean(false);
@@ -40,11 +39,11 @@ public class Square {
     }
 
     public int getX() {
-        return xPos;
+        return position.getX();
     }
 
     public int getY() {
-        return yPos;
+        return position.getY();
     }
 
     public void reveal() {
