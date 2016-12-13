@@ -31,7 +31,6 @@ public class Game {
         this.edgeSize = edgeSize;
         this.mineFreq = mineFreq;
         numOfMines = (long) ((edgeSize * edgeSize) * mineFreq);
-        System.out.println("Size: " + edgeSize + " bombs: " + numOfMines);
 
         board = new Square[edgeSize][edgeSize];
         for (int i = 0; i < edgeSize; i++) {
@@ -58,7 +57,6 @@ public class Game {
             }
 
             else {
-                System.out.println("X: " + rRow + " Y: " + rCol);
                 board[rRow][rCol] = new Square(new Position(rRow,rCol),true);
                 mines.add(board[rRow][rCol]);
                 if( rRow - 1 >= 0 && rCol - 1 >= 0 )	// upper left square
@@ -95,6 +93,9 @@ public class Game {
 
     public void leftClick(Position pos) {
         int xPos = pos.getX(), yPos=pos.getY();
+        if (board[xPos][yPos].isRevealed()) {
+            return;
+        }
         if (board[xPos][yPos].isMine()) {
             for (Square mine : mines) {
                 mine.reveal();
