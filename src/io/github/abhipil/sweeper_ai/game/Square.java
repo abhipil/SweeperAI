@@ -16,10 +16,15 @@ public class Square {
     private final AtomicBoolean revealed;
 
     public Square(Position position, boolean mine) {
-        this.position = position;
+        this(position,mine,0,false);
+    }
+
+    private Square(Position position, boolean mine, int neighbouringMines, boolean revealed) {
+        this.position = new Position(position.getX(),position.getY());
         this.mine = mine;
-        neighbouringMines = new AtomicInteger(0);
-        revealed = new AtomicBoolean(false);
+
+        this.neighbouringMines = new AtomicInteger(neighbouringMines);
+        this.revealed = new AtomicBoolean(revealed);
     }
 
     public void addNeighbour(){
@@ -85,5 +90,9 @@ public class Square {
             hash += DEFAULT_HASH*((Integer) getNeighbouringMines()).hashCode();
         }
         return hash;
+    }
+
+    public Square copy() {
+        return new Square(position, mine, neighbouringMines.get(), revealed.get());
     }
 }

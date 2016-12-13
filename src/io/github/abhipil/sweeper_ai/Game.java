@@ -27,22 +27,43 @@ public class Game {
 
     // constructor
     public Game(int edgeSize, double mineFreq) {
-        // initializing edgeSize
-        this.edgeSize = edgeSize;
-        this.mineFreq = mineFreq;
-        numOfMines = (long) ((edgeSize * edgeSize) * mineFreq);
-        System.out.println("Size: " + edgeSize + " bombs: " + numOfMines);
-
-        board = new Square[edgeSize][edgeSize];
+        this(edgeSize, mineFreq, (long) ((edgeSize * edgeSize) * mineFreq),
+                new ArrayList<Square>(), 0, false);
         for (int i = 0; i < edgeSize; i++) {
             for (int j = 0; j < edgeSize; j++) {
                 board[i][j] = new Square(new Position(i,j), false);
             }
         }
-        mines = new ArrayList<>();
-        numRevealed = new AtomicLong(0);
-        gameOver = new AtomicBoolean(false);
         generateMines();
+    }
+
+    private Game(int edgeSize, double mineFreq, long numOfMines , List<Square> mines, long numRevealed, boolean gameOver){
+
+        this.edgeSize = edgeSize;
+        this.mineFreq = mineFreq;
+        this.numOfMines = numOfMines;
+        this.board = new Square[this.edgeSize][this.edgeSize];
+        this.mines = new ArrayList<>(mines);
+        this.numRevealed = new AtomicLong(numRevealed);
+        this.gameOver = new AtomicBoolean(gameOver);
+    }
+    private Game(int edgeSize, double mineFreq, long numOfMines , Square[][] board, List<Square> mines, long numRevealed, boolean gameOver){
+        this(edgeSize, mineFreq, numOfMines, mines, numRevealed, gameOver);
+        for (int i = 0; i < edgeSize; i++) {
+            for (int j = 0; j < edgeSize; j++) {
+                this.board[i][j] = board[i][j].copy();
+            }
+        }
+    }
+
+    public Game copy() {
+        return new Game(getEdgeSize(),
+                mineFreq,
+                numOfMines,
+                board,
+                mines,
+                numRevealed.get(),
+                gameOver.get());
     }
 
     private void generateMines() {
@@ -127,11 +148,11 @@ public class Game {
             }
             int x = current.getX(), y = current.getY();
             for (int i = x-1; i<edgeSize && i<x+2; i++) {
-                if (i<0 || i==edgeSize) {
+                if (i<0) {
                     continue;
                 }
                 for (int j = y-1; j<edgeSize && j<y+2 ; j++) {
-                    if (j<0 || j==edgeSize ) {
+                    if (j<0 || (i==x&&j==y) ) {
                         continue;
                     }
                     Square child = board[i][j];
@@ -146,6 +167,15 @@ public class Game {
     public Square get(int xPos, int yPos) {
         return board[xPos][yPos];
     }
+
+    public int getEdgeSize () {
+        return edgeSize;
+    }
+
+    public long getNumRevealed () {
+        return numRevealed.get();
+    }
+
 
     public void print() {
         StringBuffer sb = new StringBuffer();
