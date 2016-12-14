@@ -1,8 +1,12 @@
 package io.github.abhipil.sweeper_ai;
 
+import io.github.abhipil.sweeper_ai.agent.AStarAgent;
 import io.github.abhipil.sweeper_ai.agent.Agent;
 import io.github.abhipil.sweeper_ai.agent.HumanAgent;
+import io.github.abhipil.sweeper_ai.game.Position;
+import io.github.abhipil.sweeper_ai.game.Square;
 
+import java.util.HashMap;
 import java.util.Random;
 
 /**
@@ -33,31 +37,75 @@ public class Executor {
         * */
         // Initialise Game instance
 
+        int numTrials = 100;
         Executor executor = new Executor();
-        Agent agent = new HumanAgent();
-        executor.runSingleGame(agent, edgeSize, mineFreq);
-
+        Agent agent = new AStarAgent();
+        executor.runSingleGame(agent, edgeSize, mineFreq, true);
+//        executor.runExperiment(agent,edgeSize,mineFreq,numTrials);
     }
 
-    private static void runSingleGame(Agent agent, int edgeSize, double mineFreq) {
+    private void runExperiment(Agent agent, int edgeSize, double mineFreq, int numTrials) {
+        int numWon = 0;
+        int[] winMoves = new int[numTrials];
+        for (int i=0; i<numTrials; i++) {
+            System.out.println("Game "+(i+1)+" intialised");
+            Game game = new Game(edgeSize, mineFreq);
+            int moves =0;
+            Position move;
+            while (!game.isOver()) {
+                move = agent.getMove(game);
+                game.leftClick(move);
+                moves ++;
+            }
+            game.print();
+            if(game.isWon()) {
+                System.out.println("You have won the game in "+moves+" moves");
+                numWon++;
+            }
+            winMoves[i] = moves;
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("The Astar agent won ")
+                .append(numWon)
+                .append(" times in ")
+                .append(numTrials)
+                .append(" trials!").append('\n');
+        for(int i=0; i< numTrials; i++) {
+            sb.append(i).append("  ");
+        }
+        sb.append('\n');
+        for(int i=0; i< numTrials; i++) {
+            sb.append(winMoves[i]).append("  ");
+        }
+        sb.append('\n');
+        System.out.print(sb);
+    }
 
 
-        Game game = new Game(edgeSize,mineFreq);
+    private void runSingleGame(Agent agent, Game game, boolean visual) {
         int moves =0;
+        Position move = new Position(0,0);
         while (!game.isOver()) {
-
-            if (agent instanceof HumanAgent) {
+            if (visual) {
                 game.print();
             }
-            game.leftClick(agent.getMove(game));
+            move = agent.getMove(game);
+            game.leftClick(move);
             moves ++;
         }
         game.print();
         if(game.isWon()) {
             System.out.println("You have won the game in "+moves+" moves");
         } else {
-            System.out.println("You lost!!");
+            System.out.println("You lost!! Landed on mine at "+move.getX()+","+move.getY());
         }
+    }
+    private void runSingleGame(Agent agent, int edgeSize, double mineFreq, boolean visual) {
+        Game game = new Game(edgeSize, mineFreq);
+        runSingleGame(agent,game,visual);
+    }
+    private void runSingleGame(Agent agent, int edgeSize, double mineFreq) {
+        runSingleGame(agent,edgeSize,mineFreq,false);
     }
 
     private static void printHelp() {

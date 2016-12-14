@@ -22,9 +22,15 @@ public class Square {
     private Square(Position position, boolean mine, int neighbouringMines, boolean revealed) {
         this.position = new Position(position.getX(),position.getY());
         this.mine = mine;
-
         this.neighbouringMines = new AtomicInteger(neighbouringMines);
         this.revealed = new AtomicBoolean(revealed);
+    }
+
+    public Square(Square copy) {
+        this(new Position(copy.getX(), copy.getY()),
+                copy.isMine(),
+                copy.isMine()?0:copy.getNeighbouringMines(),
+                copy.isRevealed());
     }
 
     public void addNeighbour(){
@@ -93,6 +99,7 @@ public class Square {
     }
 
     public Square copy() {
-        return new Square(position, mine, neighbouringMines.get(), revealed.get());
+        return new Square( new Position(position.getX(),position.getY()),
+                mine, neighbouringMines.get(), revealed.get());
     }
 }

@@ -21,6 +21,9 @@ public class HumanAgent implements Agent {
         int x, y;
         if(input != null) {
             String[] vals = input.trim().split(" ");
+            if (vals.length != 2) {
+                return getMove(game);
+            }
             try {
                 x = Integer.parseInt(vals[0]);
                 y = Integer.parseInt(vals[1]);

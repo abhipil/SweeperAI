@@ -1,8 +1,8 @@
 package io.github.abhipil.sweeper_ai;
 
+import io.github.abhipil.sweeper_ai.game.NeighbourExecutor;
 import io.github.abhipil.sweeper_ai.game.Position;
 import io.github.abhipil.sweeper_ai.game.Square;
-import javafx.geometry.Pos;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -22,22 +22,13 @@ public class Game {
     private final List<Square> mines;
     private final AtomicLong numRevealed;
     private final AtomicBoolean gameOver;
-
-
+    private final Random rand = new Random(System.currentTimeMillis());
 
     // constructor
     public Game(int edgeSize, double mineFreq) {
-<<<<<<< HEAD
-        // initializing edgeSize
-        this.edgeSize = edgeSize;
-        this.mineFreq = mineFreq;
-        numOfMines = (long) ((edgeSize * edgeSize) * mineFreq);
-
-        board = new Square[edgeSize][edgeSize];
-=======
         this(edgeSize, mineFreq, (long) ((edgeSize * edgeSize) * mineFreq),
                 new ArrayList<Square>(), 0, false);
->>>>>>> ace210f62bab7b472d91885eedb2d88bd858beb6
+
         for (int i = 0; i < edgeSize; i++) {
             for (int j = 0; j < edgeSize; j++) {
                 board[i][j] = new Square(new Position(i,j), false);
@@ -46,38 +37,44 @@ public class Game {
         generateMines();
     }
 
+    /* constructor for copy()
+     * board is iterated over and copied
+     *
+     */
+    private Game(int edgeSize, double mineFreq, long numOfMines , Square[][] board, List<Square> mines, long numRevealed, boolean gameOver){
+        this(edgeSize, mineFreq, numOfMines, mines, numRevealed, gameOver);
+        for (int i = 0; i < edgeSize; i++) {
+            for (int j = 0; j < edgeSize; j++) {
+                this.board[i][j] = new Square(board[i][j]);
+            }
+        }
+    }
+
     private Game(int edgeSize, double mineFreq, long numOfMines , List<Square> mines, long numRevealed, boolean gameOver){
 
         this.edgeSize = edgeSize;
         this.mineFreq = mineFreq;
         this.numOfMines = numOfMines;
         this.board = new Square[this.edgeSize][this.edgeSize];
-        this.mines = new ArrayList<>(mines);
+        this.mines = new ArrayList<>();
+        for (Square mine : mines) {
+            this.mines.add(new Square(mine));
+        }
         this.numRevealed = new AtomicLong(numRevealed);
         this.gameOver = new AtomicBoolean(gameOver);
-    }
-    private Game(int edgeSize, double mineFreq, long numOfMines , Square[][] board, List<Square> mines, long numRevealed, boolean gameOver){
-        this(edgeSize, mineFreq, numOfMines, mines, numRevealed, gameOver);
-        for (int i = 0; i < edgeSize; i++) {
-            for (int j = 0; j < edgeSize; j++) {
-                this.board[i][j] = board[i][j].copy();
-            }
-        }
     }
 
     public Game copy() {
         return new Game(getEdgeSize(),
-                mineFreq,
-                numOfMines,
-                board,
-                mines,
-                numRevealed.get(),
-                gameOver.get());
+                this.mineFreq,
+                this.numOfMines,
+                this.board,
+                this.mines,
+                this.numRevealed.get(),
+                this.gameOver.get());
     }
 
     private void generateMines() {
-
-        Random rand = new Random();
         int rCol,rRow;
 
         for(int index = 0 ; index < numOfMines ; index++ ) {
@@ -85,28 +82,17 @@ public class Game {
             rRow = rand.nextInt( edgeSize );
             if (board[rRow][rCol].isMine()) {
                 index--;
-            }
-
-            else {
+            } else {
                 board[rRow][rCol] = new Square(new Position(rRow,rCol),true);
                 mines.add(board[rRow][rCol]);
-                if( rRow - 1 >= 0 && rCol - 1 >= 0 )	// upper left square
-                    board[rRow - 1][rCol - 1].addNeighbour();
-                if( rRow - 1 >= 0 && rCol >= 0 )	// upper middle square
-                    board[rRow - 1][rCol].addNeighbour();
-                if( rRow - 1 >= 0 && rCol + 1 < edgeSize )	// upper right square
-                    board[rRow - 1][rCol + 1].addNeighbour();
-                if( rRow >= 0 && rCol - 1 >= 0 )	// middle left square
-                    board[rRow][rCol - 1].addNeighbour();
-                if( rRow >= 0 && rCol + 1 < edgeSize )	// middle right square
-                    board[rRow][rCol + 1].addNeighbour();
-                if( rRow + 1 < edgeSize && rCol - 1 >= 0 )	// lower left square
-                    board[rRow + 1][rCol - 1].addNeighbour();
-                if( rRow + 1 < edgeSize && rCol >= 0 )	// lower middle square
-                    board[rRow + 1][rCol].addNeighbour();
-                if( rRow + 1 < edgeSize && rCol + 1 < edgeSize )	// lower left square
-                    board[rRow + 1][rCol + 1].addNeighbour();
 
+                (new NeighbourExecutor() {
+                    @Override
+                    protected boolean keepExecuting(int i, int j) {
+                        board[i][j].addNeighbour();
+                        return true;
+                    }
+                }).iterate(board[rRow][rCol], edgeSize);
             }
         }
     }
@@ -115,7 +101,7 @@ public class Game {
 
     // check if game over
     public boolean isOver() {
-        return isWon() || gameOver.get();
+        return gameOver.get();
     }
 
     public boolean isWon() {
@@ -140,15 +126,21 @@ public class Game {
                 numRevealed.incrementAndGet();
             }
         }
+        if (isWon()) {
+            for (Square mine : mines) {
+                mine.reveal();
+            }
+            gameOver.set(true);
+        }
+
     }
 
     private void expandZeroes(int xPos, int yPos) {
-        System.out.println("Expanding zeroes");
-        Set<Square> visited = new HashSet<>();
-        Queue<Square> queue = new LinkedList<>();
+        final Set<Square> visited = new HashSet<>();
+        final Queue<Square> queue = new LinkedList<>();
         queue.offer(board[xPos][yPos]);
         while (!queue.isEmpty()) {
-            Square current = queue.poll();
+            final Square current = queue.poll();
             if (!current.isRevealed()) {
                 current.reveal();
                 numRevealed.incrementAndGet();
@@ -157,21 +149,16 @@ public class Game {
             if (current.getNeighbouringMines() != 0) {
                 continue;
             }
-            int x = current.getX(), y = current.getY();
-            for (int i = x-1; i<edgeSize && i<x+2; i++) {
-                if (i<0) {
-                    continue;
-                }
-                for (int j = y-1; j<edgeSize && j<y+2 ; j++) {
-                    if (j<0 || (i==x&&j==y) ) {
-                        continue;
-                    }
+            (new NeighbourExecutor() {
+                @Override
+                protected boolean keepExecuting(int i, int j) {
                     Square child = board[i][j];
                     if (!visited.contains(child)) {
                         queue.offer(child);
                     }
+                    return true;
                 }
-            }
+            }).iterate(current, edgeSize);
         }
     }
 
